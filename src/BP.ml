@@ -44,7 +44,7 @@ let print_row row =
 (* 打印 Array 类型矩阵 *)
 let print_matrix matr =
   printf "[\n";
-  Array.iter print_row g_network.x2mid_weight;
+  Array.iter print_row matr;
   printf "]\n";
 ;;
 
@@ -53,7 +53,7 @@ let print_matrix matr =
 let init
     ?(eta=0.3)
     ?(max_train_count=100)
-    ?(precision=0.01)
+    ?(precision=0.001)
     x_count
     mid_count
     y_count =
@@ -287,10 +287,6 @@ let train x_arr y_arr =
         )
       in
       for2 ((Array.length x_arr)-1);
-      if debug then (
-        printf "e_arr->";
-        print_row e_arr;
-      );
 
       (* 计算累计误差的均值 *)
       let e_mean e_arr =
@@ -300,6 +296,7 @@ let train x_arr y_arr =
         in
         (e_sum e_arr) /. float_of_int (Array.length e_arr)
       in
+      if debug then printf "e_mean-> %f\n" (e_mean e_arr);
       if (e_mean e_arr) < !g_precision then ()
       else for1 (n-1)
     )
@@ -308,4 +305,15 @@ let train x_arr y_arr =
 ;;
 
 let predict x_arr =
-  true ;;
+  let len = Array.length x_arr in (* 待预测的样例数 *)
+  let y_pred_arr = Array.make_matrix len g_network.y_count 0. in
+  let rec for1 i =
+    if i < 0 then y_pred_arr
+    else (
+      let x = x_arr.(i) in
+      print_row (fst (compute_y x));
+      y_pred_arr.(i) <- (fst (compute_y x));
+      for1 (i-1)
+    )
+  in
+  for1 (len-1)
