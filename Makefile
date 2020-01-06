@@ -14,7 +14,7 @@ BP.cmo: $(SRC_DIR)/BP.ml
 main.cmo: $(SRC_DIR)/main.ml
 	$(CC) -c $(SRC_DIR)/main.ml -I $(OBJ_DIR) -o $(OBJ_DIR)/main.cmo
 
-run: $(BIN_DIR)/main
+run: ./$(BIN_DIR)/main
 	./$(BIN_DIR)/main
 
 clean:

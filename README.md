@@ -61,8 +61,8 @@ train(X_list, Y_list):
       E.append(compute_e(Y, Y_out)) # 根据预测值和实际值，计算均方误差
       mid2y_grad = compute_mid2y_grad(Y, Y_out)   # 计算中间层到输出层的梯度项
       x2mid_grad = compute_x2mid_grad(mid2y_grad) # 计算输入层到中间层的梯度项
-      update_mid2y()  # 更新中间层到输出层的权值和输出层的阈值
-      update_x2mid()  # 更新输入层到中间层的权值和中间层的阈值
+      update_mid2y(mid2y_grad)  # 更新中间层到输出层的权值和输出层的阈值
+      update_x2mid(x2mid_grad)  # 更新输入层到中间层的权值和中间层的阈值
     E_mean = sum(E)/len(E)    # 训练完所有样例后，计算累计误差
     if (E_mean < precision)   # 如果误差小于精度，则不进行重复训练
       break
