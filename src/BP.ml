@@ -154,13 +154,33 @@ let compute_e y y_out =
 
 (* 计算中间层到输出层的梯度项 *)
 let compute_mid2y_grad y y_out =
-  0.001
+  let mid2y_grad = Array.make g_network.y_count 0. in
+  let rec for1 i =
+    if i < 0 then mid2y_grad
+    else (
+      mid2y_grad.(i) <- y_out.(i) *. (y.(i) -. y_out.(i)) *. (1. -. y_out.(i));
+      for1 (i-1)
+    )
+  in
+  for1 (g_network.y_count-1)
 ;;
 
 
 (* 计算输入层到中间层的梯度项 *)
 let compute_x2mid_grad mid2y_grad mid_out =
-  0.001
+  let x2mid_grad = Array.make g_network.mid_count 0. in
+  let rec for1 i =
+    let rec for2 j sum =
+      if j < 0 then sum
+      else for2 (j-1) (sum +. mid2y_grad.(j) *. g_network.mid2y_weight.(i).(j))
+    in
+    if i < 0 then x2mid_grad
+    else (
+      x2mid_grad.(i) <- mid_out.(i) *. (1. -. mid_out.(i)) *. for2 (g_network.y_count-1) 0.;
+      for1 (i-1)
+    )
+  in
+  for1 (g_network.mid_count-1)
 ;;
 
 
@@ -199,9 +219,18 @@ let train x_arr y_arr =
             printf "y_out->";
             print_row y_out;
           );
+
           e_arr.(i) <- (compute_e y y_out);                         (* 计算均方误差 *)
+
           let mid2y_grad = compute_mid2y_grad y y_out in            (* 计算中间层到输出层的梯度项 *)
           let x2mid_grad = compute_x2mid_grad mid2y_grad mid_out in (* 计算输入层到中间层的梯度项 *)
+          if debug then (
+            printf "mid2y_grad->";
+            print_row mid2y_grad;
+            printf "x2mid_grad->";
+            print_row x2mid_grad;
+          );
+
           update_mid2y mid2y_grad mid_out;  (* 更新中间层到输出层的权值和输出层的阈值 *)
           update_x2mid x2mid_grad;          (* 更新输入层到中间层的权值和中间层的阈值 *)
           for2 (i-1)
