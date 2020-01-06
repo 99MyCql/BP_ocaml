@@ -87,9 +87,9 @@ let compute_y x =
   (* 计算中间层输入 *)
   let mid_in = Array.make g_network.mid_count 0. in
   let rec mid_for1 i =
-    if debug then printf "compute_y->mid_for1->i:%d\n" i;
+    (* if debug then printf "compute_y->mid_for1->i:%d\n" i; *)
     let rec x_for j sum =
-      if debug then printf "compute_y->x_for->j:%d\n" j;
+      (* if debug then printf "compute_y->x_for->j:%d\n" j; *)
       if j < 0 then sum
       else x_for (j-1) (sum +. g_network.x2mid_weight.(j).(i) *. x.(j))
     in
@@ -128,7 +128,7 @@ let compute_y x =
   y_for1 (g_network.y_count-1);
 
   (* 计算中间层输出 *)
-  let y_out = Array.make g_network.mid_count 0. in
+  let y_out = Array.make g_network.y_count 0. in
   let rec y_for2 i =
     if i < 0 then ()
     else (
@@ -143,13 +143,17 @@ let compute_y x =
 
 
 (* 计算均方误差 *)
-let compute_e y y_pred =
-  0.001
+let compute_e y y_out =
+  let rec for1 i sum =
+    if i < 0 then sum /. 2.
+    else for1 (i-1) (sum +. (y_out.(i) -. y.(i)) *. (y_out.(i) -. y.(i)))
+  in
+  for1 (g_network.y_count-1) 0.
 ;;
 
 
 (* 计算中间层到输出层的梯度项 *)
-let compute_mid2y_grad y y_pred =
+let compute_mid2y_grad y y_out =
   0.001
 ;;
 
@@ -188,10 +192,15 @@ let train x_arr y_arr =
         else (
           let x = x_arr.(i)
           and y = y_arr.(i) in
-          let y_pred, mid_out = compute_y x in      (* 计算预测 y 值 *)
-          if debug then print_row y_pred;
-          e_arr.(i) <- (compute_e y y_pred);                        (* 计算均方误差 *)
-          let mid2y_grad = compute_mid2y_grad y y_pred in           (* 计算中间层到输出层的梯度项 *)
+          let y_out, mid_out = compute_y x in  (* 计算预测 y 值 *)
+          if debug then (
+            printf "mid_out->";
+            print_row mid_out;
+            printf "y_out->";
+            print_row y_out;
+          );
+          e_arr.(i) <- (compute_e y y_out);                         (* 计算均方误差 *)
+          let mid2y_grad = compute_mid2y_grad y y_out in            (* 计算中间层到输出层的梯度项 *)
           let x2mid_grad = compute_x2mid_grad mid2y_grad mid_out in (* 计算输入层到中间层的梯度项 *)
           update_mid2y mid2y_grad mid_out;  (* 更新中间层到输出层的权值和输出层的阈值 *)
           update_x2mid x2mid_grad;          (* 更新输入层到中间层的权值和中间层的阈值 *)
@@ -199,7 +208,10 @@ let train x_arr y_arr =
         )
       in
       for2 ((Array.length x_arr)-1);
-      if debug then print_row e_arr;
+      if debug then (
+        printf "e_arr->";
+        print_row e_arr;
+      );
 
       (* 计算累计误差的均值 *)
       let e_mean e_arr =
