@@ -17,10 +17,11 @@ type tpNetwork = {
   mutable y_theta       : float array;  (* 输出层阈值 *)
 }
 
-let debug = true                (* 是否开启调试环境 *)
+let debug = false                (* 是否开启调试环境 *)
 let g_eta = ref 0.              (* 学习率 *)
 let g_precision = ref 0.        (* 误差精度 *)
 let g_max_train_count = ref 0   (* 最大训练次数 *)
+let g_train_gap = 100           (* 每训练 g_train_gap 次输出信息 *)
 
 (* 神经网络结构体实例 *)
 let g_network : tpNetwork = {
@@ -52,13 +53,13 @@ let print_matrix matr =
 (* 初始化神经网络函数 *)
 let init
     ?(eta=0.3)
-    ?(max_train_count=100)
+    ?(max_train_count=1000)
     ?(precision=0.001)
     x_count
     mid_count
     y_count =
 
-  print_endline "init()";
+  if debug then print_endline "init()";
   g_network.x_count <- x_count;
   g_network.mid_count <- mid_count;
   g_network.y_count <- y_count;
@@ -253,7 +254,7 @@ let train x_arr y_arr =
   let rec for1 n =
     if n < 0 then ()
     else (
-      if debug then printf "===> train: %d\n" (!g_max_train_count - n);
+      if n mod g_train_gap = 0 then printf "===> train: %d\n" (!g_max_train_count - n);
       let e_arr = Array.make (Array.length x_arr) 1. in  (* 每个样例训练之后的均方误差的数组 *)
 
       (* 第二层循环，遍历数据集 *)
@@ -296,7 +297,7 @@ let train x_arr y_arr =
         in
         (e_sum e_arr) /. float_of_int (Array.length e_arr)
       in
-      if debug then printf "e_mean-> %f\n" (e_mean e_arr);
+      if n mod g_train_gap = 0 then printf "e_mean: %f\n" (e_mean e_arr);
       if (e_mean e_arr) < !g_precision then ()
       else for1 (n-1)
     )
@@ -311,7 +312,7 @@ let predict x_arr =
     if i < 0 then y_pred_arr
     else (
       let x = x_arr.(i) in
-      print_row (fst (compute_y x));
+      (* print_row (fst (compute_y x)); *)
       y_pred_arr.(i) <- (fst (compute_y x));
       for1 (i-1)
     )
