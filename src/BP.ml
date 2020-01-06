@@ -82,7 +82,7 @@ let sigmoid x =
 
 (* 计算预测 y 值 *)
 let compute_y x =
-  if debug then print_endline "===> compute_y()";
+  (* if debug then print_endline "===> compute_y()"; *)
 
   (* 计算中间层输入 *)
   let mid_in = Array.make g_network.mid_count 0. in
@@ -186,13 +186,63 @@ let compute_x2mid_grad mid2y_grad mid_out =
 
 (* 更新中间层到输出层的权值和输出层的阈值 *)
 let update_mid2y mid2y_grad mid_out =
-  ()
+  (* 更新中间层到输出层的权值 *)
+  let rec mid_for i =
+    let rec y_for j =
+      if j < 0 then ()
+      else (
+        g_network.mid2y_weight.(i).(j) <- g_network.mid2y_weight.(i).(j) +. !g_eta *. mid2y_grad.(j) *. mid_out.(i);
+        y_for (j-1)
+      )
+    in
+    if i < 0 then ()
+    else (
+      y_for (g_network.y_count-1);
+      mid_for (i-1)
+    )
+  in
+  mid_for (g_network.mid_count-1);
+
+  (* 更新中间层到输出层的阈值 *)
+  let rec y_for i =
+    if i < 0 then ()
+    else (
+      g_network.y_theta.(i) <- g_network.y_theta.(i) -. !g_eta *. mid2y_grad.(i);
+      y_for (i-1)
+    )
+  in
+  y_for (g_network.y_count-1)
 ;;
 
 
 (* 更新输入层到中间层的权值和中间层的阈值 *)
-let update_x2mid x2mid_grad =
-  ()
+let update_x2mid x2mid_grad x =
+  (* 更新输入层到中间层的权值 *)
+  let rec x_for i =
+    let rec mid_for j =
+      if j < 0 then ()
+      else (
+        g_network.x2mid_weight.(i).(j) <- g_network.x2mid_weight.(i).(j) +. !g_eta *. x2mid_grad.(j) *. x.(i);
+        mid_for (j-1)
+      )
+    in
+    if i < 0 then ()
+    else (
+      mid_for (g_network.mid_count-1);
+      x_for (i-1)
+    )
+  in
+  x_for (g_network.x_count-1);
+
+  (* 更新输入层到中间层的阈值 *)
+  let rec mid_for i =
+    if i < 0 then ()
+    else (
+      g_network.mid_theta.(i) <- g_network.mid_theta.(i) -. !g_eta *. x2mid_grad.(i);
+      mid_for (i-1)
+    )
+  in
+  mid_for (g_network.mid_count-1)
 ;;
 
 
@@ -201,9 +251,9 @@ let train x_arr y_arr =
 
   (* 第一层循环，重复训练数据集 *)
   let rec for1 n =
-    if debug then print_endline (string_of_int n);
-    if n=0 then ()
-    else
+    if n < 0 then ()
+    else (
+      if debug then printf "===> train: %d\n" (!g_max_train_count - n);
       let e_arr = Array.make (Array.length x_arr) 1. in  (* 每个样例训练之后的均方误差的数组 *)
 
       (* 第二层循环，遍历数据集 *)
@@ -232,7 +282,7 @@ let train x_arr y_arr =
           );
 
           update_mid2y mid2y_grad mid_out;  (* 更新中间层到输出层的权值和输出层的阈值 *)
-          update_x2mid x2mid_grad;          (* 更新输入层到中间层的权值和中间层的阈值 *)
+          update_x2mid x2mid_grad x;        (* 更新输入层到中间层的权值和中间层的阈值 *)
           for2 (i-1)
         )
       in
@@ -252,6 +302,7 @@ let train x_arr y_arr =
       in
       if (e_mean e_arr) < !g_precision then ()
       else for1 (n-1)
+    )
   in
   for1 !g_max_train_count
 ;;
