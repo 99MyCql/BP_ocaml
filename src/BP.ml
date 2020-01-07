@@ -250,7 +250,7 @@ let train x_arr y_arr =
   let rec for1 n =
     if n < 0 then ()
     else (
-      if n mod !g_train_gap = 0 then printf "\n=== train:%4d ===\n" (!g_max_train_count - n);
+      if n mod !g_train_gap = 0 then printf "=== train:%4d ===\n" (!g_max_train_count - n);
       let e_arr = Array.make (Array.length x_arr) 0. in  (* 每个样例训练之后的均方误差的数组 *)
 
       (* 第二层循环，遍历数据集 *)
@@ -293,7 +293,7 @@ let train x_arr y_arr =
         in
         (e_sum e_arr) /. float_of_int (Array.length e_arr)
       in
-      if n mod !g_train_gap = 0 then printf "error mean: %f\n" (e_mean e_arr);
+      if n mod !g_train_gap = 0 then printf "error mean: %f\n\n" (e_mean e_arr);
       if (e_mean e_arr) < !g_precision then ()
       else for1 (n-1)
     )

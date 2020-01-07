@@ -15,12 +15,13 @@ let test1 () =
   let x_arr = Array.make_matrix data_count x_count 0. in
   let y_arr = Array.make_matrix data_count y_count 0. in
 
+  (* 生成符合 y=x^2 模型的数据 *)
   let rec for1 i =
     let rec for2 j =
       if j < 0 then ()
       else (
-        x_arr.(i).(j) <- (2. *. Random.float 1. -. 1.);
-        y_arr.(i).(j) <- x_arr.(i).(j) *. x_arr.(i).(j);
+        x_arr.(i).(j) <- (2. *. Random.float 1. -. 1.);   (* 生成(-1,1)之间的随机数 x *)
+        y_arr.(i).(j) <- x_arr.(i).(j) *. x_arr.(i).(j);  (* 生成 y=x^2 *)
         for2 (j-1);
       )
     in
@@ -32,20 +33,26 @@ let test1 () =
   in
   for1 (data_count-1);
 
+  (* 初始化神经网络 *)
   BP.init x_count
           mid_count
           y_count
-          ~eta:0.9
+          ~eta:0.5
           ~max_train_count:2000
           ~precision:0.0001
-          ~train_gap:200;    (* 初始化神经网络 *)
-  BP.train x_arr y_arr;       (* 训练神经网络 *)
+          ~train_gap:200;
 
-  (* let y_pred_arr = BP.predict x_arr in
-  printf "source: ";
-  Util.print_matrix y_arr;
+  (* 训练神经网络 *)
+  BP.train x_arr y_arr;
+
+  (* 预测数据 *)
+  let y_pred_arr = BP.predict x_arr in
+
+  (* 在控制台对比原数据和预测数据 *)
+  printf "original: ";
+  Util.print_matrix (Util.get_subMatrix y_arr 10 20);
   printf "predict: ";
-  Util.print_matrix y_pred_arr; 预测数据 *)
+  Util.print_matrix (Util.get_subMatrix y_pred_arr 10 20);
 ;;
 
 test1()
