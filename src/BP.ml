@@ -17,11 +17,11 @@ type tpNetwork = {
   mutable y_theta       : float array;  (* 输出层阈值 *)
 }
 
-let debug = false                (* 是否开启调试环境 *)
+let g_debug = false             (* 是否开启调试环境 *)
 let g_eta = ref 0.              (* 学习率 *)
 let g_precision = ref 0.        (* 误差精度 *)
 let g_max_train_count = ref 0   (* 最大训练次数 *)
-let g_train_gap = 100           (* 每训练 g_train_gap 次输出信息 *)
+let g_train_gap = ref 1         (* 每训练 g_train_gap 次输出信息 *)
 
 (* 神经网络结构体实例 *)
 let g_network : tpNetwork = {
@@ -53,26 +53,37 @@ let print_matrix matr =
 (* 初始化神经网络函数 *)
 let init
     ?(eta=0.3)
-    ?(max_train_count=1000)
-    ?(precision=0.001)
+    ?(max_train_count=100)
+    ?(precision=0.00001)
+    ?(train_gap=10)
     x_count
     mid_count
     y_count =
 
-  if debug then print_endline "init()";
+  if g_debug then print_endline "init()";
   g_network.x_count <- x_count;
   g_network.mid_count <- mid_count;
   g_network.y_count <- y_count;
   g_eta := eta;
   g_precision := precision;
   g_max_train_count := max_train_count;
-  g_network.x2mid_weight <- Array.make_matrix x_count mid_count 0.5;
-  g_network.mid2y_weight <- Array.make_matrix mid_count y_count 0.5;
-  g_network.mid_theta <- Array.make mid_count 0.5;
-  g_network.y_theta <- Array.make y_count 0.5;
+  g_train_gap := train_gap;
+  g_network.x2mid_weight <- Array.make_matrix x_count mid_count 0.;
+  g_network.mid2y_weight <- Array.make_matrix mid_count y_count 0.;
+  g_network.mid_theta <- Array.make mid_count 0.;
+  g_network.y_theta <- Array.make y_count 0.;
 
-  if debug then print_matrix g_network.x2mid_weight;
-  if debug then print_matrix g_network.mid2y_weight;
+  (* 随机(0,1)内的数初始化权值和阈值 *)
+  let random_row row =
+    Array.map (fun x -> Random.float 1.) row
+  in
+  g_network.x2mid_weight <- Array.map random_row g_network.x2mid_weight;
+  g_network.mid2y_weight <- Array.map random_row g_network.mid2y_weight;
+  g_network.mid_theta <- random_row g_network.mid_theta;
+  g_network.y_theta <- random_row g_network.y_theta;
+
+  if g_debug then print_matrix g_network.x2mid_weight;
+  if g_debug then print_matrix g_network.mid2y_weight;
 ;;
 
 
@@ -83,14 +94,14 @@ let sigmoid x =
 
 (* 计算预测 y 值 *)
 let compute_y x =
-  (* if debug then print_endline "===> compute_y()"; *)
+  (* if g_debug then print_endline "===> compute_y()"; *)
 
   (* 计算中间层输入 *)
   let mid_in = Array.make g_network.mid_count 0. in
   let rec mid_for1 i =
-    (* if debug then printf "compute_y->mid_for1->i:%d\n" i; *)
+    (* if g_debug then printf "compute_y->mid_for1->i:%d\n" i; *)
     let rec x_for j sum =
-      (* if debug then printf "compute_y->x_for->j:%d\n" j; *)
+      (* if g_debug then printf "compute_y->x_for->j:%d\n" j; *)
       if j < 0 then sum
       else x_for (j-1) (sum +. g_network.x2mid_weight.(j).(i) *. x.(j))
     in
@@ -177,7 +188,7 @@ let compute_x2mid_grad mid2y_grad mid_out =
     in
     if i < 0 then x2mid_grad
     else (
-      x2mid_grad.(i) <- mid_out.(i) *. (1. -. mid_out.(i)) *. for2 (g_network.y_count-1) 0.;
+      x2mid_grad.(i) <- mid_out.(i) *. (1. -. mid_out.(i)) *. (for2 (g_network.y_count-1) 0.);
       for1 (i-1)
     )
   in
@@ -189,30 +200,30 @@ let compute_x2mid_grad mid2y_grad mid_out =
 let update_mid2y mid2y_grad mid_out =
   (* 更新中间层到输出层的权值 *)
   let rec mid_for i =
-    let rec y_for j =
+    let rec y_for1 j =
       if j < 0 then ()
       else (
         g_network.mid2y_weight.(i).(j) <- g_network.mid2y_weight.(i).(j) +. !g_eta *. mid2y_grad.(j) *. mid_out.(i);
-        y_for (j-1)
+        y_for1 (j-1)
       )
     in
     if i < 0 then ()
     else (
-      y_for (g_network.y_count-1);
+      y_for1 (g_network.y_count-1);
       mid_for (i-1)
     )
   in
   mid_for (g_network.mid_count-1);
 
   (* 更新中间层到输出层的阈值 *)
-  let rec y_for i =
+  let rec y_for2 i =
     if i < 0 then ()
     else (
       g_network.y_theta.(i) <- g_network.y_theta.(i) -. !g_eta *. mid2y_grad.(i);
-      y_for (i-1)
+      y_for2 (i-1)
     )
   in
-  y_for (g_network.y_count-1)
+  y_for2 (g_network.y_count-1)
 ;;
 
 
@@ -220,30 +231,30 @@ let update_mid2y mid2y_grad mid_out =
 let update_x2mid x2mid_grad x =
   (* 更新输入层到中间层的权值 *)
   let rec x_for i =
-    let rec mid_for j =
+    let rec mid_for1 j =
       if j < 0 then ()
       else (
         g_network.x2mid_weight.(i).(j) <- g_network.x2mid_weight.(i).(j) +. !g_eta *. x2mid_grad.(j) *. x.(i);
-        mid_for (j-1)
+        mid_for1 (j-1)
       )
     in
     if i < 0 then ()
     else (
-      mid_for (g_network.mid_count-1);
+      mid_for1 (g_network.mid_count-1);
       x_for (i-1)
     )
   in
   x_for (g_network.x_count-1);
 
   (* 更新输入层到中间层的阈值 *)
-  let rec mid_for i =
+  let rec mid_for2 i =
     if i < 0 then ()
     else (
       g_network.mid_theta.(i) <- g_network.mid_theta.(i) -. !g_eta *. x2mid_grad.(i);
-      mid_for (i-1)
+      mid_for2 (i-1)
     )
   in
-  mid_for (g_network.mid_count-1)
+  mid_for2 (g_network.mid_count-1)
 ;;
 
 
@@ -254,8 +265,8 @@ let train x_arr y_arr =
   let rec for1 n =
     if n < 0 then ()
     else (
-      if n mod g_train_gap = 0 then printf "===> train: %d\n" (!g_max_train_count - n);
-      let e_arr = Array.make (Array.length x_arr) 1. in  (* 每个样例训练之后的均方误差的数组 *)
+      if n mod !g_train_gap = 0 then printf "===> train: %d\n" (!g_max_train_count - n);
+      let e_arr = Array.make (Array.length x_arr) 0. in  (* 每个样例训练之后的均方误差的数组 *)
 
       (* 第二层循环，遍历数据集 *)
       let rec for2 i =
@@ -264,7 +275,7 @@ let train x_arr y_arr =
           let x = x_arr.(i)
           and y = y_arr.(i) in
           let y_out, mid_out = compute_y x in  (* 计算预测 y 值 *)
-          if debug then (
+          if g_debug then (
             printf "mid_out->";
             print_row mid_out;
             printf "y_out->";
@@ -275,7 +286,7 @@ let train x_arr y_arr =
 
           let mid2y_grad = compute_mid2y_grad y y_out in            (* 计算中间层到输出层的梯度项 *)
           let x2mid_grad = compute_x2mid_grad mid2y_grad mid_out in (* 计算输入层到中间层的梯度项 *)
-          if debug then (
+          if g_debug then (
             printf "mid2y_grad->";
             print_row mid2y_grad;
             printf "x2mid_grad->";
@@ -297,7 +308,7 @@ let train x_arr y_arr =
         in
         (e_sum e_arr) /. float_of_int (Array.length e_arr)
       in
-      if n mod g_train_gap = 0 then printf "e_mean: %f\n" (e_mean e_arr);
+      if n mod !g_train_gap = 0 then printf "e_mean: %f\n" (e_mean e_arr);
       if (e_mean e_arr) < !g_precision then ()
       else for1 (n-1)
     )
@@ -305,6 +316,8 @@ let train x_arr y_arr =
   for1 !g_max_train_count
 ;;
 
+
+(* 预测函数 *)
 let predict x_arr =
   let len = Array.length x_arr in (* 待预测的样例数 *)
   let y_pred_arr = Array.make_matrix len g_network.y_count 0. in
