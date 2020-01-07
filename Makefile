@@ -6,7 +6,7 @@ TEST_DIR = ./test
 CC = ocamlc
 
 main: obj
-	$(CC) -o $(BIN_DIR)/main $(OBJ_DIR)/util.cmo $(OBJ_DIR)/BP.cmo $(OBJ_DIR)/main.cmo
+	$(CC) -o $(BIN_DIR)/main graphics.cma $(OBJ_DIR)/util.cmo $(OBJ_DIR)/BP.cmo $(OBJ_DIR)/main.cmo
 
 obj: $(SRC_DIR)/util.ml $(SRC_DIR)/BP.ml $(SRC_DIR)/main.ml
 	$(CC) -c $(SRC_DIR)/util.ml -I $(OBJ_DIR) -o $(OBJ_DIR)/util.cmo

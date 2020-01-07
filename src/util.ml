@@ -2,12 +2,12 @@
   @name: util.ml
   @description: 工具模块
 -----------------------------------------------------------------------------*)
-
+open Graphics
 open Printf
 
 (* 打印 Array 一维数组 *)
 let print_row row =
-  printf "[";
+  printf "[ ";
   Array.iter (fun x -> printf "%f " x) row;
   printf "]\n"
 ;;
@@ -33,4 +33,19 @@ let get_subMatrix matr start_pos end_pos =
     )
   in
   for1 start_pos
+;;
+
+(* 画散点图 *)
+let scatter x_arr y_arr color =
+  let rec for1 i =
+    if i < 0 then ()
+    else (
+      (* printf "x:%d, y:%d\n" x_arr.(i) y_arr.(i); *)
+      draw_circle x_arr.(i) y_arr.(i) 1;  (* 用画小圆代替画点 *)
+      for1 (i-1);
+    )
+  in
+  set_color color;
+  for1 ((Array.length x_arr) - 1);
+
 ;;
