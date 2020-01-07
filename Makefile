@@ -5,13 +5,12 @@ TEST_DIR = ./test
 
 CC = ocamlc
 
-main: BP.cmo main.cmo
-	$(CC) -o $(BIN_DIR)/main $(OBJ_DIR)/BP.cmo $(OBJ_DIR)/main.cmo
+main: obj
+	$(CC) -o $(BIN_DIR)/main $(OBJ_DIR)/util.cmo $(OBJ_DIR)/BP.cmo $(OBJ_DIR)/main.cmo
 
-BP.cmo: $(SRC_DIR)/BP.ml
+obj: $(SRC_DIR)/util.ml $(SRC_DIR)/BP.ml $(SRC_DIR)/main.ml
+	$(CC) -c $(SRC_DIR)/util.ml -I $(OBJ_DIR) -o $(OBJ_DIR)/util.cmo
 	$(CC) -c $(SRC_DIR)/BP.ml -I $(OBJ_DIR) -o $(OBJ_DIR)/BP.cmo
-
-main.cmo: $(SRC_DIR)/main.ml
 	$(CC) -c $(SRC_DIR)/main.ml -I $(OBJ_DIR) -o $(OBJ_DIR)/main.cmo
 
 run: ./$(BIN_DIR)/main

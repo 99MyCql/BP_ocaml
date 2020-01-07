@@ -1,8 +1,9 @@
 (*---------------------------------------------------------------------------
-  @name: BP.ml
-  @description: 运行入口文件
+  @name: main.ml
+  @description: 运行入口文件，测试神经网络
 -----------------------------------------------------------------------------*)
-open Printf;;
+
+open Printf
 
 
 let data_count = 500  (* 数据集大小 *)
@@ -40,11 +41,11 @@ let test1 () =
           ~train_gap:200;    (* 初始化神经网络 *)
   BP.train x_arr y_arr;       (* 训练神经网络 *)
 
-  let y_pred_arr = BP.predict x_arr in
+  (* let y_pred_arr = BP.predict x_arr in
   printf "source: ";
-  BP.print_matrix y_arr;
+  Util.print_matrix y_arr;
   printf "predict: ";
-  BP.print_matrix y_pred_arr; (* 预测数据 *)
+  Util.print_matrix y_pred_arr; 预测数据 *)
 ;;
 
 test1()

@@ -8,21 +8,23 @@
 
 ## Project Structure
 
-- `bin/`
-- `src/`
-  - `BP.ml`
-  - `main.ml`
-- `README.md`
+- `bin/`: 目标文件目录
+- `src/`: 源代码目录
+  - `BP.ml`: BP神经网络模块
+  - `main.ml`: 运行入口文件，主要用于测试BP模块
+  - `util.ml`: 工具模块，提供打印 Array 数组等接口
+- `README.md`: 说明文档
+- `Makefile`
 
 ## Analysis & Design
 
 ### Requirement Analysis
 
-- [ ] 实现BP神经网络算法
-  - [ ] 初始化
-  - [ ] 训练
-  - [ ] 预测
-- [ ] 使用 y=x^2 模型进行测试
+- [x] 实现BP神经网络算法
+  - [x] 初始化
+  - [x] 训练
+  - [x] 预测
+- [x] 使用 y=x^2 模型进行测试
 - [ ] 使用 mnist 手写数字数据集进行测试
 
 ### Data Structure Design
@@ -69,6 +71,26 @@ train(X_list, Y_list):
 ```
 
 ## Usage
+
+in linux environment best.
+
+compile:
+
+```bash
+make
+```
+
+run:
+
+```bash
+make run
+```
+
+clean:
+
+```bash
+make clean
+```
 
 ## Format
 

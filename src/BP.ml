@@ -35,21 +35,6 @@ let g_network : tpNetwork = {
 }
 
 
-(* 打印 Array 一维数组 *)
-let print_row row =
-  printf "[";
-  Array.iter (fun x -> printf "%f " x) row;
-  printf "]\n"
-;;
-
-(* 打印 Array 类型矩阵 *)
-let print_matrix matr =
-  printf "[\n";
-  Array.iter print_row matr;
-  printf "]\n";
-;;
-
-
 (* 初始化神经网络函数 *)
 let init
     ?(eta=0.3)
@@ -73,7 +58,7 @@ let init
   g_network.mid_theta <- Array.make mid_count 0.;
   g_network.y_theta <- Array.make y_count 0.;
 
-  (* 随机(0,1)内的数初始化权值和阈值 *)
+  (* 随机(0,1)内的数初始化权值和阈值，关键性的一步 *)
   let random_row row =
     Array.map (fun x -> Random.float 1.) row
   in
@@ -82,8 +67,8 @@ let init
   g_network.mid_theta <- random_row g_network.mid_theta;
   g_network.y_theta <- random_row g_network.y_theta;
 
-  if g_debug then print_matrix g_network.x2mid_weight;
-  if g_debug then print_matrix g_network.mid2y_weight;
+  if g_debug then Util.print_matrix g_network.x2mid_weight;
+  if g_debug then Util.print_matrix g_network.mid2y_weight;
 ;;
 
 
@@ -265,7 +250,7 @@ let train x_arr y_arr =
   let rec for1 n =
     if n < 0 then ()
     else (
-      if n mod !g_train_gap = 0 then printf "===> train: %d\n" (!g_max_train_count - n);
+      if n mod !g_train_gap = 0 then printf "\n=== train:%4d ===\n" (!g_max_train_count - n);
       let e_arr = Array.make (Array.length x_arr) 0. in  (* 每个样例训练之后的均方误差的数组 *)
 
       (* 第二层循环，遍历数据集 *)
@@ -277,9 +262,9 @@ let train x_arr y_arr =
           let y_out, mid_out = compute_y x in  (* 计算预测 y 值 *)
           if g_debug then (
             printf "mid_out->";
-            print_row mid_out;
+            Util.print_row mid_out;
             printf "y_out->";
-            print_row y_out;
+            Util.print_row y_out;
           );
 
           e_arr.(i) <- (compute_e y y_out);                         (* 计算均方误差 *)
@@ -288,9 +273,9 @@ let train x_arr y_arr =
           let x2mid_grad = compute_x2mid_grad mid2y_grad mid_out in (* 计算输入层到中间层的梯度项 *)
           if g_debug then (
             printf "mid2y_grad->";
-            print_row mid2y_grad;
+            Util.print_row mid2y_grad;
             printf "x2mid_grad->";
-            print_row x2mid_grad;
+            Util.print_row x2mid_grad;
           );
 
           update_mid2y mid2y_grad mid_out;  (* 更新中间层到输出层的权值和输出层的阈值 *)
@@ -308,7 +293,7 @@ let train x_arr y_arr =
         in
         (e_sum e_arr) /. float_of_int (Array.length e_arr)
       in
-      if n mod !g_train_gap = 0 then printf "e_mean: %f\n" (e_mean e_arr);
+      if n mod !g_train_gap = 0 then printf "error mean: %f\n" (e_mean e_arr);
       if (e_mean e_arr) < !g_precision then ()
       else for1 (n-1)
     )
@@ -325,7 +310,7 @@ let predict x_arr =
     if i < 0 then y_pred_arr
     else (
       let x = x_arr.(i) in
-      (* print_row (fst (compute_y x)); *)
+      (* Util.print_row (fst (compute_y x)); *)
       y_pred_arr.(i) <- (fst (compute_y x));
       for1 (i-1)
     )
