@@ -11,8 +11,10 @@
 - `bin/`: 目标文件目录
 - `src/`: 源代码目录
   - `BP.ml`: BP神经网络模块
+  - `BP.mli`: BP模块的接口文件
   - `main.ml`: 运行入口文件，主要用于测试BP模块
   - `util.ml`: 工具模块，提供打印 Array 数组等接口
+  - `util.mli`: 工具模块的接口文件
 - `README.md`: 说明文档
 - `Makefile`
 
@@ -44,15 +46,22 @@ BP神经网络模块中的关键数据结构，如下：
 
 ### Interface Design
 
-- `init(x_count, mid_count, y_count, eta=03, max_train_count=100, precision=0.0001)`: 初始化神经网络
+- `BP`模块(详情见[BP.mli](./src/BP.mli)):
 
-- `train(X_list, Y_list)`: 训练神经网络
+  - `init(x_count, mid_count, y_count, eta=03, max_train_count=100, precision=0.0001)`: 初始化神经网络
+  - `train(X_list, Y_list)`: 训练神经网络
+  - `predict(X_list)`: 对输入数据进行预测
 
-- `predict(X_list)`: 对输入数据进行预测
+- `util`模块(详情见[util.mli](./src/util.mli)):
+
+  - `print_row(row)`: 打印一维 Array 数组
+  - `print_matrix(matr)`: 打印二维 Array 数组
+  - `get_subMatrix(matr, start_pos, end_pos)`: 获取二维数组的子数组
+  - `scatter(x_arr, y_arr, color)`: 画散点图
 
 ### Algorithm Design
 
-主要对`train()`函数进行算法设计：
+主要对`BP`模块的`train()`函数进行算法设计：
 
 ```design
 train(X_list, Y_list):

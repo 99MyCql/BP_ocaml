@@ -23,7 +23,7 @@ let g_precision = ref 0.        (* 误差精度 *)
 let g_max_train_count = ref 0   (* 最大训练次数 *)
 let g_train_gap = ref 1         (* 每训练 g_train_gap 次输出信息 *)
 
-(* 神经网络结构体实例 *)
+(* 初始化神经网络结构体实例 *)
 let g_network : tpNetwork = {
   x_count = 0;
   mid_count = 0;
