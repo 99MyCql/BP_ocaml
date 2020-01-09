@@ -25,12 +25,12 @@
 
 ### Requirement Analysis
 
-- [x] 实现BP神经网络算法
+- [x] 实现BP神经网络算法。完成者：[dounine](https://github.com/99MyCql)
   - [x] 初始化
   - [x] 训练
   - [x] 预测
   - [x] 使用 y=x^2 模型进行测试
-- [x] 解析 mnist 手写数字数据集，并进行测试
+- [x] 解析 mnist 手写数字数据集，并进行测试。完成者：[TayMarine](https://github.com/TayMarine)
   - [x] 解析 mnist 数据集
   - [x] 显示手写数字图片
   - [x] 使用 BP 神经网络进行预测
