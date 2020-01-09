@@ -65,10 +65,58 @@ let test1 () =
   draw_string "original: red, predict: green";    (* 显示标题 *)
   Util.scatter x_arr_temp y_arr_temp red;         (* 画原数据散点图 *)
   Util.scatter x_arr_temp y_pred_arr_temp green;  (* 画预测数据的散点图 *)
-  read_line ();
+  printf "press Enter to close the graph\n";
+	let _string = read_line () in
+	close_graph ();;
+	close_graph ();
+;;
+
+let test2 () =
+  let x_count = 784 and mid_count = 10 and y_count = 10 in
+  let x_arr_int, y_arr_int = Mnist.get_data data_count in
+  let x_arr = Array.map (fun x -> Array.map (fun y -> (float_of_int y) /. 255.) x) x_arr_int in
+  let y_arr = Array.map (fun x -> Array.map (fun y -> float_of_int y) x) y_arr_int in
+
+  (* Util.print_matrix (Util.get_subMatrix x_arr 0 1);
+  Util.print_matrix (Util.get_subMatrix y_arr 0 1); *)
+
+  (* 初始化神经网络 *)
+  BP.init x_count
+          mid_count
+          y_count
+          ~eta:0.3
+          ~max_train_count:100
+          ~precision:0.0001
+          ~train_gap:10;
+
+  (* 训练神经网络 *)
+  BP.train x_arr y_arr;
+
+  (* 预测数据 *)
+  let y_pred_arr = BP.predict x_arr in
+  let max_pos arr =
+    let max = ref 0.
+    and pos = ref 0 in
+    for i=0 to (Array.length arr)-1 do
+      if arr.(i) > !max then (
+        max := arr.(i);
+        pos := i;
+      )
+    done;
+    !pos;
+  in
+  printf "original[0]: %d\n"(max_pos y_arr.(0));
+  printf "predict[0]: %d\n" (max_pos y_pred_arr.(0));
+  Mnist.draw(x_arr_int.(0), black);
+  printf "original[1]: %d\n"(max_pos y_arr.(1));
+  printf "predict[1]: %d\n" (max_pos y_pred_arr.(1));
+  Mnist.draw(x_arr_int.(1), black);
 ;;
 
 let main () =
-  test1()
+  printf "\n================ test1 ================\n";
+  test1 ();
+  printf "\n================ test2 ================\n";
+  test2 ();
 in
 main ();;
